@@ -150,11 +150,23 @@ class RAGPipeline:
                 max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS
             )
 
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=prompt_content,
-                config=config
-            )
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt_content,
+                    config=config
+                )
+            except APIError as api_err:
+                # If model is not found (404), attempt fallback to gemini-3.8-flash
+                if ("404" in str(api_err) or "NOT_FOUND" in str(api_err)) and self.model_name != "gemini-3.8-flash":
+                    response = self.client.models.generate_content(
+                        model="gemini-3.8-flash",
+                        contents=prompt_content,
+                        config=config
+                    )
+                    self.model_name = "gemini-3.8-flash"
+                else:
+                    raise api_err
 
             generated_text = response.text if response and response.text else "No response generated."
 

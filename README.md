@@ -25,7 +25,7 @@ Designed for real-world document workflows, ResearchMate lets you upload multipl
    - Supports incremental multi-document indexing, individual document deletion with automatic index rebuilding, and disk persistence.
 
 4. **Grounded RAG Pipeline & Source Citations**
-   - Strictly grounds the Gemini LLM (`gemini-2.5-flash` / `gemini-2.0-flash`) via a rigorous system prompt.
+   - Strictly grounds the Gemini LLM (`gemini-3.8-flash`) via a rigorous system prompt.
    - Every answer includes exact citations: `[Document: <filename>, Page: <page>]`.
    - Never fabricates facts or citations: explicitly reports when information is not present in the uploaded documents.
    - Transparently highlights conflicting information across different documents.

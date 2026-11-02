@@ -23,6 +23,7 @@ from config import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_TOP_K,
     DEFAULT_GEMINI_MODEL,
+    AVAILABLE_GEMINI_MODELS,
     get_gemini_api_key
 )
 from src.document_processor import (
@@ -120,6 +121,9 @@ def init_session_state():
     if "api_key" not in st.session_state:
         st.session_state.api_key = get_gemini_api_key()
 
+    if "model_name" not in st.session_state:
+        st.session_state.model_name = DEFAULT_GEMINI_MODEL
+
     if "suggested_questions" not in st.session_state:
         st.session_state.suggested_questions = [
             "What are the main topics discussed across these documents?",
@@ -133,8 +137,8 @@ init_session_state()
 # Helper instances
 vector_store: VectorStore = st.session_state.vector_store
 retriever = DocumentRetriever(vector_store=vector_store, default_top_k=DEFAULT_TOP_K)
-rag_pipeline = RAGPipeline(retriever=retriever, api_key=st.session_state.api_key, model_name=DEFAULT_GEMINI_MODEL)
-summarizer = DocumentSummarizer(vector_store=vector_store, api_key=st.session_state.api_key, model_name=DEFAULT_GEMINI_MODEL)
+rag_pipeline = RAGPipeline(retriever=retriever, api_key=st.session_state.api_key, model_name=st.session_state.model_name)
+summarizer = DocumentSummarizer(vector_store=vector_store, api_key=st.session_state.api_key, model_name=st.session_state.model_name)
 
 
 # ==========================================
@@ -166,6 +170,18 @@ with st.sidebar:
             summarizer.update_api_key(entered_key)
         else:
             st.warning("Please provide a Gemini API Key to enable AI chat and summarization.")
+
+    # Gemini Model Selection
+    selected_model = st.selectbox(
+        "Gemini Model",
+        options=AVAILABLE_GEMINI_MODELS,
+        index=0 if st.session_state.model_name not in AVAILABLE_GEMINI_MODELS else AVAILABLE_GEMINI_MODELS.index(st.session_state.model_name),
+        help="Select the Gemini model for answer generation."
+    )
+    if selected_model != st.session_state.model_name:
+        st.session_state.model_name = selected_model
+        rag_pipeline.model_name = selected_model
+        summarizer.model_name = selected_model
 
     st.divider()
 

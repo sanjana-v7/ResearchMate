@@ -159,11 +159,22 @@ class DocumentSummarizer:
                 max_output_tokens=3000
             )
 
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=prompt,
-                config=config
-            )
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt,
+                    config=config
+                )
+            except APIError as api_err:
+                if ("404" in str(api_err) or "NOT_FOUND" in str(api_err)) and self.model_name != "gemini-3.8-flash":
+                    response = self.client.models.generate_content(
+                        model="gemini-3.8-flash",
+                        contents=prompt,
+                        config=config
+                    )
+                    self.model_name = "gemini-3.8-flash"
+                else:
+                    raise api_err
 
             summary_text = response.text if response and response.text else "No summary could be generated."
 
