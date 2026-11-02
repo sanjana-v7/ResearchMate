@@ -1,0 +1,37 @@
+# Python Bytecode and Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.streamlit/secrets.toml
+
+# Uploaded User Documents & Extracted Data
+data/uploads/*
+!data/uploads/.gitkeep
+
+# FAISS Vector Store Indices & Local Embeddings
+vector_store/*
+!vector_store/.gitkeep
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Specific
+.DS_Store
+Thumbs.db

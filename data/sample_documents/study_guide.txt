@@ -1,0 +1,23 @@
+# ARTIFICIAL INTELLIGENCE & MACHINE LEARNING: RAG ARCHITECTURE STUDY GUIDE
+
+## 1. Introduction to Retrieval-Augmented Generation (RAG)
+Retrieval-Augmented Generation (RAG) is a hybrid architecture that combines non-parametric memory (external document indices) with parametric memory (pre-trained Large Language Models). Standard LLMs suffer from knowledge cutoffs, domain gaps, and hallucinations. RAG addresses these limitations by dynamically retrieving ground-truth passages relevant to a user prompt and conditioning generation on those retrieved excerpts.
+
+## 2. Text Chunking Strategies
+Text chunking is the process of partitioning unstructured source documents into discrete semantic units before embedding:
+- Fixed-Size Chunking: Splits strictly by character or word count. Fast but can break sentences mid-thought.
+- Recursive Character Chunking: Uses a hierarchy of separators (e.g. ["\n\n", "\n", ". ", " "]) to preserve semantic paragraphs and sentences while staying within chunk size limits.
+- Chunk Size vs Overlap Trade-off: Smaller chunks (e.g., 200-400 characters) provide fine-grained embeddings but may lack adequate context. Larger chunks (e.g., 800-1200 characters) capture richer context but dilute semantic specificity. Overlaps (typically 10% to 20%) prevent loss of context across split boundaries.
+
+## 3. Vector Embeddings and Indexing
+Dense embeddings map textual passages into high-dimensional geometric spaces where semantic proximity correlates with mathematical distance:
+- Models: Modern bi-encoders such as sentence-transformers (all-MiniLM-L6-v2) map sentences to 384-dimensional dense vectors.
+- Distance Metrics: Cosine similarity and Euclidean (L2) distance. When vectors are L2-normalized to unit length, cosine similarity is equivalent to the inner dot product, enabling high-performance matrix multiplications.
+- Vector Indexing with FAISS: Facebook AI Similarity Search provides specialized index structures. `IndexFlatIP` offers exhaustive, exact inner-product search with zero quantization loss, ideal for datasets ranging from hundreds to tens of thousands of document chunks.
+
+## 4. Evaluation Frameworks for RAG Systems
+Key metrics for validating a production RAG pipeline:
+1. Faithfulness / Groundedness: Measures whether the generated answer relies purely on the provided context without introducing fabricated facts.
+2. Answer Relevance: Evaluates whether the generated response directly and concisely addresses the user's specific query.
+3. Context Precision: Measures the proportion of retrieved chunks that are genuinely relevant to answering the prompt.
+4. Context Recall: Measures whether all necessary facts required to answer the query were successfully retrieved by the retriever.

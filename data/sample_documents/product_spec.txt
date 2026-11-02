@@ -1,0 +1,29 @@
+# HYPERROUTER X-1000 GIGABIT WI-FI 7 ROUTER – USER MANUAL & SPECIFICATIONS
+
+## 1. System Overview
+The HyperRouter X-1000 is an enterprise-grade tri-band Wi-Fi 7 wireless router designed for high-density smart home and small-to-medium enterprise deployments. It delivers aggregated theoretical wireless speeds of up to 19 Gbps across 2.4 GHz, 5 GHz, and 6 GHz frequency bands.
+
+## 2. Hardware Architecture
+- CPU: Quad-Core 1.8 GHz 64-bit ARM Cortex-A73 Processor.
+- System Memory: 1 GB DDR4 RAM.
+- Internal Flash Storage: 512 MB eMMC.
+- Antennas: 6 external high-gain omnidirectional dipole antennas equipped with beamforming hardware amplifiers.
+- Network Ports:
+  * 1 x 2.5 Gbps WAN / Internet Port (Auto-MDI/MDIX)
+  * 4 x 1 Gbps Gigabit Ethernet LAN Ports
+  * 1 x USB 3.0 Type-A Port for network-attached storage (NAS) and media streaming.
+
+## 3. Installation, Power & Reset Instructions
+1. Connect the provided 12V / 3A DC power adapter to the power jack and plug into an AC outlet (100V-240V, 50/60Hz).
+2. Connect your ISP fiber/cable modem to the 2.5 Gbps WAN port using a Cat6A or higher Ethernet cable.
+3. Power on the unit using the rear power rocker switch. The front status LED will glow solid blue once Internet synchronization completes.
+4. Factory Reset Procedure: To restore the device to default factory configuration, use a paperclip to depress and hold the recessed RESET button on the rear panel for exactly 10 seconds. Release the button when the power LED blinks amber rapidly. The router will reboot in approximately 90 seconds with default SSID credentials.
+
+## 4. Operating Environment & Safety Limits
+- Operating Temperature: 0°C to 40°C (32°F to 104°F).
+- Storage Temperature: -40°C to 70°C (-40°F to 158°F).
+- Operating Humidity: 10% to 90% Non-Condensing.
+- Caution: Keep vents unobstructed. Do not expose the device to moisture, liquids, or direct heat sources.
+
+## 5. Warranty & Technical Support
+The HyperRouter X-1000 is backed by a 2-Year Limited Manufacturer Hardware Warranty covering material defects under normal consumer use. Software updates and security vulnerability patches are guaranteed for 5 years from the initial commercial release date (through December 31, 2031).
