@@ -7,6 +7,7 @@ and citation verification using the official google-genai SDK.
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 import os
+import time
 
 from google import genai
 from google.genai import types
@@ -150,23 +151,7 @@ class RAGPipeline:
                 max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS
             )
 
-            try:
-                response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt_content,
-                    config=config
-                )
-            except APIError as api_err:
-                # If model is not found (404), attempt fallback to gemini-3.8-flash
-                if ("404" in str(api_err) or "NOT_FOUND" in str(api_err)) and self.model_name != "gemini-3.8-flash":
-                    response = self.client.models.generate_content(
-                        model="gemini-3.8-flash",
-                        contents=prompt_content,
-                        config=config
-                    )
-                    self.model_name = "gemini-3.8-flash"
-                else:
-                    raise api_err
+            response = self._generate_with_retry_and_fallback(prompt_content, config)
 
             generated_text = response.text if response and response.text else "No response generated."
 
@@ -181,7 +166,9 @@ class RAGPipeline:
             # Handle Gemini API errors (rate limits, invalid key, quota, etc.)
             error_str = str(e)
             user_friendly_msg = f"Gemini API Error: {error_str}"
-            if "RESOURCE_EXHAUSTED" in error_str or "429" in error_str:
+            if "503" in error_str or "UNAVAILABLE" in error_str:
+                user_friendly_msg = "Gemini API is temporarily experiencing high traffic spikes. Please wait a few seconds and try again, or switch models in the sidebar."
+            elif "RESOURCE_EXHAUSTED" in error_str or "429" in error_str:
                 user_friendly_msg = "Gemini API rate limit or quota exceeded. Please wait a moment and try again."
             elif "INVALID_ARGUMENT" in error_str or "API_KEY_INVALID" in error_str:
                 user_friendly_msg = "The provided Gemini API Key is invalid. Please check your credentials."
@@ -201,6 +188,52 @@ class RAGPipeline:
                 error_message=str(e),
                 has_context=True
             )
+
+    def _generate_with_retry_and_fallback(
+        self,
+        prompt_content: str,
+        config: types.GenerateContentConfig
+    ):
+        """
+        Execute generation with automatic backoff retry for transient 503/429 errors
+        and fallback cascade across available Gemini models.
+        """
+        candidate_models = [self.model_name]
+        for m in ["gemini-3.8-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
+            if m not in candidate_models:
+                candidate_models.append(m)
+
+        last_error = None
+        for model in candidate_models:
+            for attempt in range(2):
+                try:
+                    response = self.client.models.generate_content(
+                        model=model,
+                        contents=prompt_content,
+                        config=config
+                    )
+                    self.model_name = model
+                    return response
+                except APIError as api_err:
+                    last_error = api_err
+                    err_str = str(api_err)
+                    if "503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str:
+                        if attempt == 0:
+                            time.sleep(1.5)  # Brief backoff before retry
+                            continue
+                        else:
+                            break  # Move to next candidate model
+                    elif "404" in err_str or "NOT_FOUND" in err_str:
+                        break  # Model not supported, try next model
+                    else:
+                        raise api_err
+                except Exception as e:
+                    last_error = e
+                    break
+
+        if last_error:
+            raise last_error
+        raise RuntimeError("Generation failed across all fallback models.")
 
     def _build_prompt(
         self,

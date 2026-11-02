@@ -37,10 +37,20 @@ DEFAULT_TOP_K = 5
 SIMILARITY_SCORE_THRESHOLD = 0.25  # Cosine similarity threshold for relevance
 
 # Gemini LLM Settings
-# Supported models: gemini-3.8-flash (latest high-performance model), gemini-2.5-flash
+# Supported models: gemini-3.8-flash (latest), gemini-2.0-flash, gemini-1.5-flash
 DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
-FALLBACK_GEMINI_MODEL = "gemini-2.5-flash"
-AVAILABLE_GEMINI_MODELS = ["gemini-3.8-flash", "gemini-2.5-flash"]
+FALLBACK_GEMINI_MODEL = "gemini-2.0-flash"
+AVAILABLE_GEMINI_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-2.5-flash"
+]
+FALLBACK_MODELS_CASCADE = [
+    "gemini-3.8-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash"
+]
 DEFAULT_TEMPERATURE = 0.2
 DEFAULT_MAX_OUTPUT_TOKENS = 2048
 

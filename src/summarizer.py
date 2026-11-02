@@ -6,6 +6,7 @@ Covers Main Topic, Key Points, Important Information, Dates & Figures, and Concl
 
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
+import time
 
 from google import genai
 from google.genai import types
@@ -159,22 +160,7 @@ class DocumentSummarizer:
                 max_output_tokens=3000
             )
 
-            try:
-                response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=config
-                )
-            except APIError as api_err:
-                if ("404" in str(api_err) or "NOT_FOUND" in str(api_err)) and self.model_name != "gemini-3.8-flash":
-                    response = self.client.models.generate_content(
-                        model="gemini-3.8-flash",
-                        contents=prompt,
-                        config=config
-                    )
-                    self.model_name = "gemini-3.8-flash"
-                else:
-                    raise api_err
+            response = self._generate_with_retry_and_fallback(prompt, config)
 
             summary_text = response.text if response and response.text else "No summary could be generated."
 
@@ -185,11 +171,17 @@ class DocumentSummarizer:
             )
 
         except APIError as e:
+            error_str = str(e)
+            user_msg = f"Gemini API Error during summarization: {error_str}"
+            if "503" in error_str or "UNAVAILABLE" in error_str:
+                user_msg = "Gemini API is temporarily experiencing high traffic spikes. Please try again shortly or switch models in the sidebar."
+            elif "RESOURCE_EXHAUSTED" in error_str or "429" in error_str:
+                user_msg = "Gemini API rate limit or quota exceeded. Please wait a moment and try again."
             return SummaryResult(
                 document_name=filename or "All Documents",
                 content="",
                 success=False,
-                error_message=f"Gemini API Error during summarization: {str(e)}"
+                error_message=user_msg
             )
         except Exception as e:
             return SummaryResult(
@@ -198,3 +190,46 @@ class DocumentSummarizer:
                 success=False,
                 error_message=f"Unexpected error during summarization: {str(e)}"
             )
+
+    def _generate_with_retry_and_fallback(
+        self,
+        prompt_content: str,
+        config: types.GenerateContentConfig
+    ):
+        """Execute generation with automatic backoff retry and fallback cascade."""
+        candidate_models = [self.model_name]
+        for m in ["gemini-3.8-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
+            if m not in candidate_models:
+                candidate_models.append(m)
+
+        last_error = None
+        for model in candidate_models:
+            for attempt in range(2):
+                try:
+                    response = self.client.models.generate_content(
+                        model=model,
+                        contents=prompt_content,
+                        config=config
+                    )
+                    self.model_name = model
+                    return response
+                except APIError as api_err:
+                    last_error = api_err
+                    err_str = str(api_err)
+                    if "503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str:
+                        if attempt == 0:
+                            time.sleep(1.5)
+                            continue
+                        else:
+                            break
+                    elif "404" in err_str or "NOT_FOUND" in err_str:
+                        break
+                    else:
+                        raise api_err
+                except Exception as e:
+                    last_error = e
+                    break
+
+        if last_error:
+            raise last_error
+        raise RuntimeError("Summarization failed across all fallback models.")
